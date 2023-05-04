@@ -1,7 +1,8 @@
 .terraform
-.terraform/*
-.terraform.lock.hcl
 terraform.tfstate
 terraform.tfstate.backup
-
+.terraform.lock.hcl
+.DS_store
+.terraform.tfstate.lock.info
+.terraform*
 

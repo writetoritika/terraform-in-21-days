@@ -1,6 +1,6 @@
 data "aws_ami" "amazonlinux" {
   most_recent = true
-  
+
   filter {
     name   = "name"
     values = ["amzn2-ami-kernel-*"]
@@ -19,7 +19,7 @@ resource "aws_instance" "public" {
   key_name                    = "linuxkey"
   vpc_security_group_ids      = [aws_security_group.public.id]
   subnet_id                   = aws_subnet.public[0].id
-
+  user_data                   = file("user-data.sh")
   tags = {
     Name = "${var.env_code}-public"
   }
@@ -36,6 +36,14 @@ resource "aws_security_group" "public" {
     to_port     = 22
     protocol    = "tcp"
     cidr_blocks = ["73.32.30.227/32"]
+  }
+
+   ingress {
+    description = "HTTP from public"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   egress {
@@ -58,7 +66,7 @@ resource "aws_instance" "private" {
   subnet_id              = aws_subnet.private[0].id
 
   tags = {
-    Name = "${var.env_code}-public"
+    Name = "${var.env_code}-private"
   }
 }
 

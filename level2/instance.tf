@@ -12,20 +12,6 @@ data "aws_ami" "amazonlinux" {
   }
 }
 
-resource "aws_instance" "private" {
-  count                  =2
-
-  ami                    = data.aws_ami.amazonlinux.id
-  instance_type          = "t3.micro"
-  key_name               = "linuxkey"
-  vpc_security_group_ids = [aws_security_group.private.id]
-  subnet_id              = data.terraform_remote_state.level1.outputs.private_subnet_id[count.index]
-  user_data              = file("user-data.sh")
-  tags = {
-    Name = "${var.env_code}-private"
-  }
-}
-
 resource "aws_security_group" "private" {
   name        = "${var.env_code}-private"
   description = "Allow VPC traffic"
@@ -60,3 +46,28 @@ resource "aws_security_group" "private" {
   }
 }
 
+resource "aws_launch_configuration" "main" {
+  name_prefix     = "${var.env_code}-"
+  image_id        = data.aws_ami.amazonlinux.id
+  instance_type   = "t3.micro"
+  security_groups = [aws_security_group.private.id]
+  user_data       = file("user-data.sh")
+  key_name        = "linuxkey" 
+}
+
+resource "aws_autoscaling_group" "main" {
+  name             = var.env_code
+  min_size         = 2
+  desired_capacity = 2
+  max_size         = 4
+
+  target_group_arns    = [aws_lb_target_group.main.arn]
+  launch_configuration = aws_launch_configuration.main.name
+  vpc_zone_identifier  = data.terraform_remote_state.level1.outputs.private_subnet_id
+
+  tag {
+    key                 = "Name"
+    value               = var.env_code
+    propagate_at_launch = true
+  }
+}

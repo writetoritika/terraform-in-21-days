@@ -17,14 +17,6 @@ resource "aws_security_group" "private" {
   description = "Allow VPC traffic"
   vpc_id      = data.terraform_remote_state.level1.outputs.vpc_id
 
-  ingress {
-    description = "SSH from VPC"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [data.terraform_remote_state.level1.outputs.vpc_cidr]
-  }
-
    ingress {
     description    = "HTTP from load balancer"
     from_port      = 80
@@ -47,12 +39,12 @@ resource "aws_security_group" "private" {
 }
 
 resource "aws_launch_configuration" "main" {
-  name_prefix     = "${var.env_code}-"
-  image_id        = data.aws_ami.amazonlinux.id
-  instance_type   = "t3.micro"
-  security_groups = [aws_security_group.private.id]
-  user_data       = file("user-data.sh")
-  key_name        = "linuxkey" 
+  name_prefix          = "${var.env_code}-"
+  image_id             = data.aws_ami.amazonlinux.id
+  instance_type        = "t3.micro"
+  security_groups      = [aws_security_group.private.id]
+  user_data            = file("user-data.sh")
+  iam_instance_profile = aws_iam_instance_profile.main.name 
 }
 
 resource "aws_autoscaling_group" "main" {

@@ -62,3 +62,15 @@ resource "aws_lb_listener" "main" {
     target_group_arn = aws_lb_target_group.main.arn
   }
 }
+
+data "aws_route53_zone" "main" {
+  name = "writetoritika.com"
+}
+
+resource "aws_route53_record" "www" {
+  zone_id = data.aws_route53_zone.main.zone_id
+  name    = "www.${data.aws_route53_zone.main.name}"
+  type    = "CNAME"
+  ttl     = "300"
+  records = [aws_lb.main.dns_name]
+}
